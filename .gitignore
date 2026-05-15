@@ -1,0 +1,20 @@
+.env
+.env.docker
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pdf
+.DS_Store
+*.log
+
+# Dokumen kerja internal (tidak dipublikasikan)
+CLAUDE.md
+docs/laporan-brainstorm-claude.md
+
+# Aset gambar besar di root (hindari repo membengkak)
+Concept Image.png

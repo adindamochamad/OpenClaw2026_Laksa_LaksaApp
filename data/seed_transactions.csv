@@ -1,0 +1,13 @@
+date,amount,type,category,description
+2026-05-08,1500000,income,penjualan,Penjualan harian Selasa
+2026-05-08,320000,expense,pembelian_stok,Beli bahan baku
+2026-05-09,1750000,income,penjualan,Penjualan harian Rabu
+2026-05-09,280000,expense,pembelian_stok,Beli bahan baku
+2026-05-10,1600000,income,penjualan,Penjualan harian Kamis
+2026-05-10,850000,expense,lainnya,Perbaikan peralatan mendadak
+2026-05-11,900000,income,penjualan,Penjualan harian Jumat (turun)
+2026-05-12,500000,income,penjualan,Penjualan Sabtu (drop signifikan)
+2026-05-13,200000,expense,operasional,Listrik + air
+2026-05-14,1400000,income,penjualan,Penjualan Rabu normal
+2026-05-15,1800000,income,penjualan,Penjualan hari ini
+2026-05-15,950000,expense,pembelian_stok,Restok mingguan besar

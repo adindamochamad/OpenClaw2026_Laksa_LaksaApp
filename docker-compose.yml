@@ -1,0 +1,27 @@
+# MySQL 8 untuk pengembangan Laksa (Docker).
+# Jalankan: docker compose up -d
+# Lalu dari host: mysql ... < db/migrations/001_initial.sql (lihat docs/mysql-setup.md)
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: laksa-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-laksa_root_dev}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-laksa_db}
+      # Root boleh dari host (Docker Desktop Mac sering tampil sebagai 192.168.x.x)
+      MYSQL_ROOT_HOST: "%"
+      # User khusus aplikasi (disarankan dari host; tidak bergantung pada root@localhost)
+      MYSQL_USER: ${MYSQL_USER:-laksa}
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:-laksa_app_dev}
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - laksa_mysql_data:/var/lib/mysql
+
+volumes:
+  laksa_mysql_data:
