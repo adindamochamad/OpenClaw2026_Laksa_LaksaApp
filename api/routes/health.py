@@ -16,12 +16,16 @@ def kesehatan():
     """Aggregated health for API, database, and integrations."""
     db_ok = cek_koneksi_db()
     openclaw_ok = openclaw_client.cek_gateway_openclaw_hidup()
+    wa_siap, channel_gagal = openclaw_client.cek_whatsapp_openclaw_siap()
     url_oc = os.getenv("OPENCLAW_GATEWAY_URL", "").strip()
-    saluran_wa = (
-        "openclaw"
-        if url_oc and openclaw_ok
-        else ("openclaw_offline" if url_oc else "twilio_only")
-    )
+    if url_oc and openclaw_ok and wa_siap:
+        saluran_wa = "openclaw"
+    elif url_oc and openclaw_ok:
+        saluran_wa = "openclaw_whatsapp_unlinked"
+    elif url_oc:
+        saluran_wa = "openclaw_offline"
+    else:
+        saluran_wa = "twilio_only"
     return {
         "status": "ok" if db_ok else "degraded",
         "waktu": datetime.utcnow().isoformat() + "Z",
@@ -29,6 +33,8 @@ def kesehatan():
         "lingkungan": os.getenv("APP_ENV", "development"),
         "database": "connected" if db_ok else "disconnected",
         "openclaw_gateway": "running" if openclaw_ok else "offline",
+        "openclaw_whatsapp_ready": wa_siap if url_oc and openclaw_ok else None,
+        "openclaw_whatsapp_failing": channel_gagal if channel_gagal else None,
         "whatsapp_channel": saluran_wa,
     }
 

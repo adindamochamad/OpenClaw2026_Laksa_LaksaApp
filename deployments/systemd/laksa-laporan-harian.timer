@@ -1,0 +1,11 @@
+[Unit]
+Description=Timer laporan harian Laksa (default 20:00 WIB)
+
+[Timer]
+OnCalendar=*-*-* 20:00:00
+Timezone=Asia/Jakarta
+Persistent=true
+Unit=laksa-laporan-harian.service
+
+[Install]
+WantedBy=timers.target

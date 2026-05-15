@@ -19,6 +19,7 @@ class LaksaState(TypedDict, total=False):
     trigger: str
     tanggal_laporan: Any
     nomor_peer_whatsapp: str
+    lewati_wa_laporan: bool
     raw_transactions: list
     normalized_transactions: list
     analysis_result: dict

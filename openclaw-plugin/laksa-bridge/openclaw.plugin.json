@@ -1,0 +1,19 @@
+{
+  "id": "laksa-bridge",
+  "name": "Laksa Bridge",
+  "description": "Meneruskan pesan WhatsApp ke API Laksa dan membalas tanpa LLM OpenClaw",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "laksaWebhookUrl": {
+        "type": "string",
+        "description": "URL POST webhook Laksa"
+      },
+      "laksaWebhookSecret": {
+        "type": "string",
+        "description": "Header X-OpenClaw-Secret"
+      }
+    }
+  }
+}

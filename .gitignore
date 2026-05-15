@@ -15,6 +15,7 @@ __pycache__/
 # Dokumen kerja internal (tidak dipublikasikan)
 CLAUDE.md
 docs/laporan-brainstorm-claude.md
+LAPORAN_PROJECT_LAKSA.md
 
 # Aset gambar besar di root (hindari repo membengkak)
 Concept Image.png

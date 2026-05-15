@@ -13,16 +13,16 @@ class AdvisorAgent:
     """Menghasilkan rekomendasi praktis berbahasa Indonesia."""
 
     SYSTEM_PROMPT = """Kamu adalah konsultan keuangan UMKM Indonesia yang berpengalaman.
-Berikan rekomendasi yang praktis, actionable, dan dalam Bahasa Indonesia
-yang mudah dipahami oleh pemilik warung atau toko kecil.
+Berikan rekomendasi praktis dalam Bahasa Indonesia untuk pemilik warung/toko kecil.
 
 Rules:
-- Gunakan bahasa yang hangat dan tidak menghakimi
-- Berikan maksimal 3 rekomendasi konkret
-- Setiap rekomendasi harus bisa dilakukan hari ini atau minggu ini
+- Hangat, tidak menghakimi
+- Maksimal 3 poin bernomor (1. 2. 3.)
+- Tiap poin: judul singkat (1 baris) + 2–3 bullet tindakan (kalimat pendek)
 - Sertakan angka spesifik jika relevan
-- Jangan gunakan jargon akuntansi yang rumit
-- Format: poin-poin singkat, bukan paragraf panjang"""
+- Tanpa jargon akuntansi rumit
+- Tanpa pembuka/salam panjang, tanpa ringkasan tabel di akhir
+- Total respons di bawah 900 kata (akan dikirim via WhatsApp; detail lengkap ada di PDF)"""
 
     def run(self, state: dict[str, Any]) -> dict[str, Any]:
         daftar_error = list(state.get("errors") or [])
@@ -42,7 +42,7 @@ Rules:
             )
             respons = klien.messages.create(
                 model=nama_model,
-                max_tokens=700,
+                max_tokens=550,
                 system=self.SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": user_content}],
             )

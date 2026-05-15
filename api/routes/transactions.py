@@ -16,6 +16,19 @@ from schemas.transaction import TransaksiBuat
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 
+@router.get("")
+def daftar_transaksi(
+    business_id: int,
+    sumber: Optional[str] = None,
+    limit: int = 50,
+):
+    """Daftar transaksi per bisnis (terbaru dulu)."""
+    batas = max(1, min(limit, 200))
+    baris = repo.ambil_transaksi_bisnis(business_id, sumber=sumber)
+    baris.sort(key=lambda r: (r.get("created_at"), r.get("id")), reverse=True)
+    return {"business_id": business_id, "count": len(baris[:batas]), "items": baris[:batas]}
+
+
 def _jalankan_agensi(id_bisnis: int, pemicu: str, tanggal: Optional[date] = None):
     """Membangun state awal dan menjalankan graf."""
     tanggal_efektif = tanggal or date.today()

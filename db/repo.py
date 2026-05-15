@@ -104,7 +104,7 @@ def sisipkan_laporan(
                  total_income, total_expense, net_cashflow, anomalies_detected,
                  recommendations, whatsapp_sent)
                 VALUES
-                (:bid, :rtype, :mulai, :akhir, :score, :inc, :exp, :net, CAST(:anom AS JSON), :rec, :wa)
+                (:bid, :rtype, :mulai, :akhir, :score, :inc, :exp, :net, :anom, :rec, :wa)
                 """
             ),
             {
@@ -218,6 +218,54 @@ def daftar_bisnis() -> list[dict[str, Any]]:
     with dapatkan_koneksi() as koneksi:
         baris = koneksi.execute(text("SELECT * FROM businesses ORDER BY id")).mappings().all()
     return [dict(r) for r in baris]
+
+
+def cek_bisnis_ada(business_id: int) -> bool:
+    """True jika baris businesses dengan id tersebut ada (untuk FK transaksi)."""
+    with dapatkan_koneksi() as koneksi:
+        baris = koneksi.execute(
+            text("SELECT 1 FROM businesses WHERE id = :bid LIMIT 1"),
+            {"bid": business_id},
+        ).fetchone()
+    return baris is not None
+
+
+def ambil_id_bisnis_pertama() -> Optional[int]:
+    """ID bisnis terkecil; dipakai webhook bila tidak ada business_id di payload."""
+    with dapatkan_koneksi() as koneksi:
+        nilai = koneksi.execute(
+            text("SELECT id FROM businesses ORDER BY id ASC LIMIT 1")
+        ).scalar()
+    return int(nilai) if nilai is not None else None
+
+
+def ambil_bisnis_berdasarkan_id(business_id: int) -> Optional[dict[str, Any]]:
+    with dapatkan_koneksi() as koneksi:
+        baris = koneksi.execute(
+            text("SELECT * FROM businesses WHERE id = :bid LIMIT 1"),
+            {"bid": business_id},
+        ).mappings().fetchone()
+    return dict(baris) if baris else None
+
+
+def ambil_transaksi_dari_id_doku(id_doku: str) -> Optional[dict[str, Any]]:
+    """Mencari transaksi yang sudah ada (idempotensi webhook DOKU)."""
+    if not id_doku or id_doku == "unknown":
+        return None
+    with dapatkan_koneksi() as koneksi:
+        baris = koneksi.execute(
+            text(
+                """
+                SELECT id, business_id, amount, type, category, description, source,
+                       doku_transaction_id, transaction_date, created_at
+                FROM transactions
+                WHERE doku_transaction_id = :doku
+                LIMIT 1
+                """
+            ),
+            {"doku": id_doku},
+        ).mappings().fetchone()
+    return dict(baris) if baris else None
 
 
 def buat_bisnis_baru(

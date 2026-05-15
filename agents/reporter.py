@@ -13,6 +13,9 @@ from db.connection import dapatkan_koneksi
 from sqlalchemy import text
 from tools import openclaw_client, pdf_generator, twilio_client
 
+# Batas karakter rekomendasi di WhatsApp (sisanya hanya di PDF)
+BATAS_REKOMENDASI_WA = int(os.getenv("LAPORAN_WA_MAX_REKOMENDASI_CHARS", "1200"))
+
 
 def _format_tanggal_indonesia(tanggal: date) -> str:
     """Format tanggal ramah pembaca lokal."""
@@ -34,6 +37,32 @@ def _format_tanggal_indonesia(tanggal: date) -> str:
         tanggal.weekday()
     ]
     return f"{hari}, {tanggal.day} {bulan_id[tanggal.month]} {tanggal.year}"
+
+
+def _ringkas_rekomendasi_untuk_whatsapp(teks: str, batas: int = BATAS_REKOMENDASI_WA) -> str:
+    """
+    Memotong rekomendasi panjang agar muat satu bubble WhatsApp.
+    Detail lengkap tetap disimpan di PDF dan kolom reports.recommendations.
+    """
+    if not teks or not teks.strip():
+        return "(belum ada rekomendasi)"
+    teks_bersih = teks.strip()
+    if len(teks_bersih) <= batas:
+        return teks_bersih
+
+    potong = teks_bersih[:batas]
+    idx_baris = potong.rfind("\n")
+    if idx_baris > int(batas * 0.55):
+        potong = potong[:idx_baris]
+    else:
+        idx_kalimat = potong.rfind(". ")
+        if idx_kalimat > int(batas * 0.55):
+            potong = potong[: idx_kalimat + 1]
+
+    return (
+        potong.rstrip()
+        + "\n\n_(Rekomendasi dipersingkat. Detail lengkap ada di PDF laporan harian.)_"
+    )
 
 
 class ReporterAgent:
@@ -85,7 +114,11 @@ class ReporterAgent:
                 anomali,
                 rekomendasi,
             )
-            wa_ok, pesan_error_wa = self._kirim_pesan_whatsapp_prioritas(state, pesan)
+            lewati_wa = bool(state.get("lewati_wa_laporan"))
+            if lewati_wa:
+                wa_ok, pesan_error_wa = False, []
+            else:
+                wa_ok, pesan_error_wa = self._kirim_pesan_whatsapp_prioritas(state, pesan)
             for err in pesan_error_wa:
                 daftar_error.append(err)
 
@@ -154,6 +187,7 @@ class ReporterAgent:
 
         if url_gateway:
             if openclaw_client.kirim_whatsapp_lewat_openclaw(nomor_peer, teks_pesan):
+                daftar_pesan.append("whatsapp: openclaw")
                 return True, daftar_pesan
             daftar_pesan.append("openclaw: gagal kirim ke gateway")
             if not izinkan_fallback_twilio:
@@ -161,6 +195,8 @@ class ReporterAgent:
 
         hasil_twilio = twilio_client.kirim_whatsapp(teks_pesan)
         terkirim = bool(hasil_twilio.get("sent"))
+        if terkirim:
+            daftar_pesan.append("whatsapp: twilio")
         if not terkirim and hasil_twilio.get("error"):
             daftar_pesan.append(f"whatsapp_twilio: {hasil_twilio.get('error')}")
         return terkirim, daftar_pesan
@@ -182,7 +218,7 @@ class ReporterAgent:
             garis_anomali += "\n".join(
                 f"• {a.get('description', '')}" for a in anomali[:3]
             )
-        rekomendasi_ringkas = rekomendasi.strip() or "(belum ada rekomendasi)"
+        rekomendasi_wa = _ringkas_rekomendasi_untuk_whatsapp(rekomendasi)
         return (
             "🌶️ *LAKSA — Laporan Harian*\n"
             f"📅 {_format_tanggal_indonesia(tanggal)}\n\n"
@@ -192,6 +228,6 @@ class ReporterAgent:
             f"❤️ Skor Kesehatan: {skor}/100"
             f"{garis_anomali}\n\n"
             "💡 *Rekomendasi:*\n"
-            f"{rekomendasi_ringkas}\n\n"
+            f"{rekomendasi_wa}\n\n"
             "_Powered by Laksa AI Agent 🍜_"
         )
